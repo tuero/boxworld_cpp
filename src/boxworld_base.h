@@ -93,7 +93,14 @@ public:
      * Get the legal actions which can be applied in the state.
      * @return vector containing each actions available
      */
-    [[nodiscard]] auto legal_actions() const noexcept -> const std::vector<Action> &;
+    [[nodiscard]] auto legal_actions() const noexcept -> std::vector<Action>;
+
+    /**
+     * Get the legal actions which can be applied in the state, and store in the given vector.
+     * @note Use when wanting to reuse a pre-allocated vector
+     * @param actions The vector to store the available actions in
+     */
+    void legal_actions(std::vector<Action> &actions) const noexcept;
 
     /**
      * Get the number of possible actions
@@ -123,11 +130,30 @@ public:
     [[nodiscard]] auto get_observation() const noexcept -> std::vector<float>;
 
     /**
+     * Get a flat representation of the current state observation, and store in the given vector.
+     * @note Use when wanting to reuse a pre-allocated vector
+     * The observation should be viewed as the shape given by observation_shape(), where 1 represents the element at the
+     * given position.
+     * @param obs Vector to store the observation in
+     */
+    void get_observation(std::vector<float> &obs) const noexcept;
+
+    /**
      * Get a flat representation of the current state observation.
      * The observation should be viewed as the shape given by observation_shape().
      * @return vector where 1 represents object at position
      */
     [[nodiscard]] auto get_observation_environment() const noexcept -> std::vector<float>;
+
+    /**
+     * Get a flat representation of the current state observation without the goal or inventory, and store in the given
+     * vector.
+     * @note Use when wanting to reuse a pre-allocated vector
+     * The observation should be viewed as the shape given by observation_shape(), where 1 represents the element at the
+     * given position.
+     * @param obs Vector to store the observation in
+     */
+    void get_observation_environment(std::vector<float> &obs) const noexcept;
 
     /**
      * Get the shape the image should be viewed as.
@@ -186,6 +212,9 @@ public:
      * @return flat indices for each single key + lock
      */
     [[nodiscard]] auto get_target_indices() const noexcept -> std::vector<std::size_t>;
+
+    // All possible actions
+    static const std::vector<Action> ALL_ACTIONS;
 
     friend auto operator<<(std::ostream &os, const BoxWorldGameState &state) -> std::ostream &;
 

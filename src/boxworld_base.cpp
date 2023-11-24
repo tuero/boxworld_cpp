@@ -30,6 +30,8 @@ auto BoxWorldGameState::operator==(const BoxWorldGameState& other) const noexcep
     return local_state == other.local_state && *shared_state == *other.shared_state;
 }
 
+const std::vector<Action> BoxWorldGameState::ALL_ACTIONS{Action::kUp, Action::kRight, Action::kDown, Action::kLeft};
+
 // ---------------------------------------------------------------------------
 
 // Data
@@ -163,9 +165,15 @@ auto BoxWorldGameState::is_solution() const noexcept -> bool {
     return local_state.inventory == Element::kColourGoal;
 }
 
-const std::vector<Action> all_actions{Action::kUp, Action::kRight, Action::kDown, Action::kLeft};
-auto BoxWorldGameState::legal_actions() const noexcept -> const std::vector<Action>& {
-    return all_actions;
+auto BoxWorldGameState::legal_actions() const noexcept -> std::vector<Action> {
+    return ALL_ACTIONS;
+}
+
+void BoxWorldGameState::legal_actions(std::vector<Action>& actions) const noexcept {
+    actions.clear();
+    for (const auto& a : ALL_ACTIONS) {
+        actions.push_back(a);
+    }
 }
 
 auto BoxWorldGameState::observation_shape() const noexcept -> std::array<std::size_t, 3> {
@@ -199,6 +207,30 @@ auto BoxWorldGameState::get_observation() const noexcept -> std::vector<float> {
     return obs;
 }
 
+void BoxWorldGameState::get_observation(std::vector<float>& obs) const noexcept {
+    const auto channel_length = shared_state->rows * shared_state->cols;
+    const auto obs_size = kNumChannels * channel_length;
+    obs.clear();
+    obs.reserve(obs_size);
+    std::fill_n(std::back_inserter(obs), obs_size, 0);
+
+    // Fill board (elements which are not empty)
+    assert(local_state.board.size() == channel_length);
+    for (std::size_t i = 0; i < channel_length; ++i) {
+        const auto& el = local_state.board[i];
+        if (el != Element::kEmpty) {
+            obs[static_cast<std::size_t>(el) * channel_length + i] = 1;
+        }
+    }
+
+    // Fill inventory
+    if (local_state.inventory) {
+        const auto inventory_channel = static_cast<std::size_t>(*local_state.inventory) + kNumElements - 1;
+        const auto inventory_start_idx = inventory_channel * channel_length;
+        std::fill_n(obs.begin() + static_cast<int>(inventory_start_idx), channel_length, 1);
+    }
+}
+
 auto BoxWorldGameState::get_observation_environment() const noexcept -> std::vector<float> {
     const auto channel_length = shared_state->rows * shared_state->cols;
     std::vector<float> obs((kNumElements - 1) * channel_length, 0);
@@ -213,6 +245,23 @@ auto BoxWorldGameState::get_observation_environment() const noexcept -> std::vec
     }
 
     return obs;
+}
+
+void BoxWorldGameState::get_observation_environment(std::vector<float>& obs) const noexcept {
+    const auto channel_length = shared_state->rows * shared_state->cols;
+    const auto obs_size = (kNumElements - 1) * channel_length;
+    obs.clear();
+    obs.reserve(obs_size);
+    std::fill_n(std::back_inserter(obs), obs_size, 0);
+
+    // Fill board (elements which are not empty)
+    assert(local_state.board.size() == channel_length);
+    for (std::size_t i = 0; i < channel_length; ++i) {
+        const auto& el = local_state.board[i];
+        if (el != Element::kEmpty) {
+            obs[static_cast<std::size_t>(el) * channel_length + i] = 1;
+        }
+    }
 }
 
 auto BoxWorldGameState::image_shape() const noexcept -> std::array<std::size_t, 3> {
@@ -314,8 +363,8 @@ void BoxWorldGameState::ParseBoard() {
     if (seglist.size() < 2) {
         throw std::invalid_argument("Board string should have at minimum 3 values separated by '|'.");
     }
-    int rows = std::stoi(seglist[0]);
-    int cols = std::stoi(seglist[1]);
+    const int rows = std::stoi(seglist[0]);
+    const int cols = std::stoi(seglist[1]);
     if (seglist.size() != static_cast<std::size_t>(rows * cols) + 2) {
         throw std::invalid_argument("Supplied rows/cols does not match input board length.");
     }
