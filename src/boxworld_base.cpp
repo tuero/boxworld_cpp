@@ -201,7 +201,7 @@ auto BoxWorldGameState::get_observation() const noexcept -> std::vector<float> {
     if (local_state.inventory) {
         const auto inventory_channel = static_cast<std::size_t>(*local_state.inventory) + kNumElements - 1;
         const auto inventory_start_idx = inventory_channel * channel_length;
-        std::fill_n(obs.begin() + static_cast<int>(inventory_start_idx), channel_length, 1);
+        std::fill_n(obs.begin() + static_cast<int>(inventory_start_idx), channel_length, static_cast<float>(1));
     }
 
     return obs;
@@ -212,7 +212,7 @@ void BoxWorldGameState::get_observation(std::vector<float>& obs) const noexcept 
     const auto obs_size = kNumChannels * channel_length;
     obs.clear();
     obs.reserve(obs_size);
-    std::fill_n(std::back_inserter(obs), obs_size, 0);
+    std::fill_n(std::back_inserter(obs), obs_size, static_cast<float>(0));
 
     // Fill board (elements which are not empty)
     assert(local_state.board.size() == channel_length);
@@ -227,7 +227,7 @@ void BoxWorldGameState::get_observation(std::vector<float>& obs) const noexcept 
     if (local_state.inventory) {
         const auto inventory_channel = static_cast<std::size_t>(*local_state.inventory) + kNumElements - 1;
         const auto inventory_start_idx = inventory_channel * channel_length;
-        std::fill_n(obs.begin() + static_cast<int>(inventory_start_idx), channel_length, 1);
+        std::fill_n(obs.begin() + static_cast<int>(inventory_start_idx), channel_length, static_cast<float>(1));
     }
 }
 
@@ -252,7 +252,7 @@ void BoxWorldGameState::get_observation_environment(std::vector<float>& obs) con
     const auto obs_size = (kNumElements - 1) * channel_length;
     obs.clear();
     obs.reserve(obs_size);
-    std::fill_n(std::back_inserter(obs), obs_size, 0);
+    std::fill_n(std::back_inserter(obs), obs_size, static_cast<float>(0));
 
     // Fill board (elements which are not empty)
     assert(local_state.board.size() == channel_length);
