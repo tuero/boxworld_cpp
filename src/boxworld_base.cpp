@@ -315,7 +315,7 @@ auto BoxWorldGameState::get_hash() const noexcept -> uint64_t {
     return local_state.zorb_hash;
 }
 
-auto BoxWorldGameState::get_agent_index() const noexcept -> uint64_t {
+auto BoxWorldGameState::get_agent_index() const noexcept -> std::size_t {
     return local_state.agent_idx;
 }
 
