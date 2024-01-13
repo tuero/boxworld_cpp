@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <random>
 #include <sstream>
 
 namespace boxworld {
