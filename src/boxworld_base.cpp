@@ -101,7 +101,7 @@ void BoxWorldGameState::reset() {
     InitKeyLockIndices();
 
     // zorbist hashing
-    std::mt19937 gen(shared_state->rng_seed);
+    std::mt19937 gen(static_cast<unsigned long>(shared_state->rng_seed));
     std::uniform_int_distribution<uint64_t> dist(0);
     const auto channel_size = shared_state->rows * shared_state->cols;
     // Game board
@@ -371,10 +371,10 @@ void BoxWorldGameState::ParseBoard() {
 
     // Parse
     local_state.board.clear();
-    shared_state->rows = rows;
-    shared_state->cols = cols;
+    shared_state->rows = static_cast<std::size_t>(rows);
+    shared_state->cols = static_cast<std::size_t>(cols);
     for (std::size_t i = 2; i < seglist.size(); ++i) {
-        const std::size_t el_idx = std::stoi(seglist[i]);
+        const auto el_idx = static_cast<std::size_t>(std::stoi(seglist[i]));
         if (el_idx > kNumElements) {
             std::cerr << shared_state->game_board_str << std::endl;
             std::cerr << el_idx << std::endl;
@@ -474,19 +474,19 @@ auto BoxWorldGameState::IndexFromAction(std::size_t index, Action action) const 
     auto col = index % shared_state->cols;
     auto row = (index - col) / shared_state->cols;
     const auto& offsets = kActionOffsets[static_cast<std::size_t>(action)];    // NOLINT(*-bounds-constant-array-index)
-    col += offsets.first;
-    row += offsets.second;
+    col = static_cast<std::size_t>(static_cast<int>(col) + offsets.first);
+    row = static_cast<std::size_t>(static_cast<int>(row) + offsets.second);
     return (shared_state->cols * row) + col;
 }
 
 auto BoxWorldGameState::InBounds(std::size_t index, Action action) const noexcept -> bool {
     const auto rows = shared_state->rows;
     const auto cols = shared_state->cols;
-    int col = static_cast<int>(index % cols);
-    int row = static_cast<int>((index - col) / cols);
+    auto col = static_cast<std::size_t>(index % cols);
+    auto row = static_cast<std::size_t>((index - col) / cols);
     const auto& offsets = kActionOffsets[static_cast<std::size_t>(action)];    // NOLINT(*-bounds-constant-array-index)
-    col += offsets.first;
-    row += offsets.second;
+    col = static_cast<std::size_t>(static_cast<int>(col) + offsets.first);
+    row = static_cast<std::size_t>(static_cast<int>(row) + offsets.second);
     return col >= 0 && col < static_cast<int>(cols) && row >= 0 && row < static_cast<int>(rows);
 }
 
