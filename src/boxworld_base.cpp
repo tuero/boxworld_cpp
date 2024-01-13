@@ -480,14 +480,14 @@ auto BoxWorldGameState::IndexFromAction(std::size_t index, Action action) const 
 }
 
 auto BoxWorldGameState::InBounds(std::size_t index, Action action) const noexcept -> bool {
-    const auto rows = shared_state->rows;
-    const auto cols = shared_state->cols;
-    auto col = static_cast<std::size_t>(index % cols);
-    auto row = static_cast<std::size_t>((index - col) / cols);
+    const auto rows = static_cast<int>(shared_state->rows);
+    const auto cols = static_cast<int>(shared_state->cols);
+    auto col = static_cast<int>(index) % cols;
+    auto row = (static_cast<int>(index) - col) / cols;
     const auto& offsets = kActionOffsets[static_cast<std::size_t>(action)];    // NOLINT(*-bounds-constant-array-index)
-    col = static_cast<std::size_t>(static_cast<int>(col) + offsets.first);
-    row = static_cast<std::size_t>(static_cast<int>(row) + offsets.second);
-    return col >= 0 && col < cols && row >= 0 && row < rows;
+    col = col + offsets.first;
+    row = row + offsets.second;
+    return col < cols && row >= 0 && row < rows;
 }
 
 auto BoxWorldGameState::HasKey(std::size_t index) const noexcept -> bool {
