@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <exception>
 #include <sstream>
 
 namespace boxworld {
@@ -487,7 +486,7 @@ auto BoxWorldGameState::InBounds(std::size_t index, Action action) const noexcep
     const auto& offsets = kActionOffsets[static_cast<std::size_t>(action)];    // NOLINT(*-bounds-constant-array-index)
     col = static_cast<std::size_t>(static_cast<int>(col) + offsets.first);
     row = static_cast<std::size_t>(static_cast<int>(row) + offsets.second);
-    return col >= 0 && col < static_cast<int>(cols) && row >= 0 && row < static_cast<int>(rows);
+    return col >= 0 && col < cols && row >= 0 && row < rows;
 }
 
 auto BoxWorldGameState::HasKey(std::size_t index) const noexcept -> bool {
