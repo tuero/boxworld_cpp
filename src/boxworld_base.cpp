@@ -8,8 +8,8 @@
 
 namespace boxworld {
 
-SharedStateInfo::SharedStateInfo(const GameParameters& params)
-    : params(params),
+SharedStateInfo::SharedStateInfo(GameParameters params_)
+    : params(std::move(params_)),
       rng_seed(std::get<int>(params.at("rng_seed"))),
       game_board_str(std::get<std::string>(params.at("game_board_str"))) {}
 
@@ -71,7 +71,7 @@ struct Pixel {
     unsigned char b;
 };
 const Pixel WHITE = {0xff, 0xff, 0xff};
-const Pixel BLACK = {0x00, 0x00, 0x00};
+// const Pixel BLACK = {0x00, 0x00, 0x00};
 const std::unordered_map<Element, Pixel> kElementToPixelMap{
     {Element::kColour0, {0x9c, 0x5a, 0x3c}},
     {Element::kColour1, {0xed, 0x1c, 0x24}},

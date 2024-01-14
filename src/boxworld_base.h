@@ -34,7 +34,7 @@ static const GameParameters kDefaultGameParams{
 
 // Shared global state information relevant to all states for the given game
 struct SharedStateInfo {
-    SharedStateInfo(const GameParameters &params);
+    SharedStateInfo(GameParameters params);
     // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
     GameParameters params;                    // Copy of game parameters for state resetting
     int rng_seed;                             // Seed
