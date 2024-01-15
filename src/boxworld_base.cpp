@@ -124,7 +124,17 @@ void BoxWorldGameState::reset() {
     }
 }
 
-void BoxWorldGameState::apply_action(Action action) noexcept {
+void BoxWorldGameState::apply_action(Action action) {
+    switch (action) {
+        case Action::kUp:
+        case Action::kRight:
+        case Action::kDown:
+        case Action::kLeft:
+            break;
+        default:
+            throw std::invalid_argument("Unknown action.");
+    }
+
     local_state.reward_signal_colour = 0;
     local_state.reward_signal_index = 0;
     const auto agent_idx = local_state.agent_idx;
