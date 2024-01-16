@@ -76,11 +76,19 @@ public:
      */
     void reset();
 
+    [[nodiscard]] constexpr static auto is_valid_element(Element element) -> bool {
+        return static_cast<int>(element) >= 0 && static_cast<int>(element) < static_cast<int>(kNumElements);
+    }
+
+    [[nodiscard]] constexpr static auto is_valid_action(Action action) -> bool {
+        return static_cast<int>(action) >= 0 && static_cast<int>(action) < static_cast<int>(kNumActions);
+    }
+
     /**
      * Apply the action to the current state, and set the reward and signals.
      * @param action The action to apply, should be one of the legal actions
      */
-    void apply_action(Action action);
+    void apply_action(Action action) noexcept;
 
     /**
      * Check if the state is in the solution state (agent inside exit).
@@ -190,7 +198,7 @@ public:
      * @param element The hidden cell type of the element to search for
      * @return flat indices for each instance of element
      */
-    [[nodiscard]] auto get_indices(const Element &element) const noexcept -> std::vector<std::size_t>;
+    [[nodiscard]] auto get_indices(Element element) const noexcept -> std::vector<std::size_t>;
 
     /**
      * Get element at given index

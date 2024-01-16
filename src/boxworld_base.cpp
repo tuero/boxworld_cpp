@@ -124,16 +124,8 @@ void BoxWorldGameState::reset() {
     }
 }
 
-void BoxWorldGameState::apply_action(Action action) {
-    switch (action) {
-        case Action::kUp:
-        case Action::kRight:
-        case Action::kDown:
-        case Action::kLeft:
-            break;
-        default:
-            throw std::invalid_argument("Unknown action.");
-    }
+void BoxWorldGameState::apply_action(Action action) noexcept {
+    assert(is_valid_action(action));
 
     local_state.reward_signal_colour = 0;
     local_state.reward_signal_index = 0;
@@ -329,7 +321,8 @@ auto BoxWorldGameState::get_agent_index() const noexcept -> std::size_t {
     return local_state.agent_idx;
 }
 
-auto BoxWorldGameState::get_indices(const Element& element) const noexcept -> std::vector<std::size_t> {
+auto BoxWorldGameState::get_indices(Element element) const noexcept -> std::vector<std::size_t> {
+    assert(is_valid_element(element));
     std::vector<std::size_t> indices;
     for (std::size_t i = 0; i < local_state.board.size(); ++i) {
         if (local_state.board[i] == element) {
