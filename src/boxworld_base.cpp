@@ -52,6 +52,23 @@ const std::array<std::string, kNumElements> kElementToStrMap{
     "@",    // kAgent
     " ",    // kEmpty
 };
+const std::array<std::string, kNumElements> kElementToLongStrMap{
+    "lred",       // kColour0
+    "dred",       // kColour1
+    "orange",     // kColour2
+    "brown",      // kColour3
+    "yello",      // kColour4
+    "lgreen",     // kColour5
+    "dgreen",     // kColour6
+    "lblue",      // kColour7
+    "blue",       // kColour8
+    "dblue",      // kColour9
+    "lpurple",    // kColour10
+    "rpurple",    // kColour11
+    "white",      // kColourGoal
+    "black",      // kAgent
+    "grey",       // kEmpty
+};
 
 // Direction to offsets (col, row)
 using Offset = std::pair<int, int>;
@@ -70,22 +87,22 @@ struct Pixel {
     unsigned char b;
 };
 const Pixel WHITE = {0xff, 0xff, 0xff};
-// const Pixel BLACK = {0x00, 0x00, 0x00};
+const Pixel BLACK = {0x00, 0x00, 0x00};
 const std::unordered_map<Element, Pixel> kElementToPixelMap{
-    {Element::kColour0, {0x9c, 0x5a, 0x3c}},
-    {Element::kColour1, {0xed, 0x1c, 0x24}},
-    {Element::kColour2, {0xff, 0xa3, 0xb1}},
-    {Element::kColour3, {0xff, 0x7e, 0x00}},
-    {Element::kColour4, {0xe5, 0xaa, 0x7a}},
-    {Element::kColour5, {0xff, 0xc2, 0x0e}},
-    {Element::kColour6, {0xf5, 0xe4, 0x9c}},
-    {Element::kColour7, {0xa8, 0xe6, 0x1d}},
-    {Element::kColour8, {0x22, 0xb1, 0x4c}},
-    {Element::kColour9, {0x00, 0xb7, 0xef}},
-    {Element::kColour10, {0x6f, 0x31, 0x98}},
-    {Element::kColour11, {0x2f, 0x36, 0x99}},
+    {Element::kColour0, {0xfe, 0x00, 0x00}},     // light red
+    {Element::kColour1, {0x80, 0x00, 0x01}},     // dark red
+    {Element::kColour2, {0xff, 0xb7, 0x32}},     // orange
+    {Element::kColour3, {0x80, 0x34, 0x00}},     // brown
+    {Element::kColour4, {0xff, 0xff, 0x00}},     // yellow
+    {Element::kColour5, {0x00, 0xfe, 0x21}},     // light green
+    {Element::kColour6, {0x00, 0x7f, 0x0e}},     // dark green
+    {Element::kColour7, {0x32, 0xa9, 0xfe}},     // light blue
+    {Element::kColour8, {0x00, 0x26, 0xff}},     // blue
+    {Element::kColour9, {0x00, 0xe6, 0x66}},     // dark blue
+    {Element::kColour10, {0xb1, 0x00, 0xfe}},    // light purple
+    {Element::kColour11, {0x47, 0x00, 0x66}},    // dark purple
     {Element::kColourGoal, WHITE},
-    {Element::kAgent, {0x99, 0x00, 0x30}},
+    {Element::kAgent, BLACK},
     {Element::kEmpty, {0xb4, 0xb4, 0xb4}},
 };
 
@@ -348,6 +365,10 @@ auto BoxWorldGameState::get_item_str(std::size_t index) const noexcept -> std::s
     assert(index < shared_state->rows * shared_state->cols);
     const auto el = local_state.board.at(index);
     return kElementToStrMap.at(static_cast<std::size_t>(el));
+}
+
+auto BoxWorldGameState::get_element_str(Element element) const noexcept -> std::string {
+    return kElementToLongStrMap.at(static_cast<std::size_t>(element));
 }
 
 // ---------------------------------------------------------------------------

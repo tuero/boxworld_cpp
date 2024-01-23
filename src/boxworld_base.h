@@ -225,6 +225,13 @@ public:
     [[nodiscard]] auto get_item_str(std::size_t index) const noexcept -> std::string;
 
     /**
+     * Get string representation of element at given index
+     * @param index Index to query
+     * @return string representation of element
+     */
+    [[nodiscard]] auto get_element_str(Element element) const noexcept -> std::string;
+
+    /**
      * Get all indices for target elements of the agent (single keys + locks)
      * @return flat indices for each single key + lock
      */
