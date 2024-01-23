@@ -510,7 +510,7 @@ auto BoxWorldGameState::InBounds(std::size_t index, Action action) const noexcep
     const auto& offsets = kActionOffsets[static_cast<std::size_t>(action)];    // NOLINT(*-bounds-constant-array-index)
     col = col + offsets.first;
     row = row + offsets.second;
-    return col < cols && row >= 0 && row < rows;
+    return col >= 0 && col < cols && row >= 0 && row < rows;
 }
 
 auto BoxWorldGameState::HasKey(std::size_t index) const noexcept -> bool {
