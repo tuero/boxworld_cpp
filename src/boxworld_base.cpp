@@ -35,7 +35,7 @@ const std::vector<Action> BoxWorldGameState::ALL_ACTIONS{Action::kUp, Action::kR
 // ---------------------------------------------------------------------------
 
 // Data
-constexpr std::array kElementToStrMap{
+const std::array<std::string, kNumElements> kElementToStrMap{
     "a",    // kColour0
     "b",    // kColour1
     "c",    // kColour2
@@ -52,7 +52,6 @@ constexpr std::array kElementToStrMap{
     "@",    // kAgent
     " ",    // kEmpty
 };
-static_assert(kElementToStrMap.size() == kNumElements);
 
 // Direction to offsets (col, row)
 using Offset = std::pair<int, int>;
