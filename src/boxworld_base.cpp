@@ -57,7 +57,7 @@ const std::array<std::string, kNumElements> kElementToLongStrMap{
     "dred",       // kColour1
     "orange",     // kColour2
     "brown",      // kColour3
-    "yello",      // kColour4
+    "yellow",     // kColour4
     "lgreen",     // kColour5
     "dgreen",     // kColour6
     "lblue",      // kColour7
