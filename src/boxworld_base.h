@@ -237,6 +237,12 @@ public:
      */
     [[nodiscard]] auto get_target_indices() const noexcept -> std::vector<std::size_t>;
 
+    /**
+     * Check if key is being held in inventory
+     * @return True if holding key of any colour, false otherwise
+     */
+    [[nodiscard]] auto has_key() const noexcept -> bool;
+
     // All possible actions
     static const std::vector<Action> ALL_ACTIONS;
 

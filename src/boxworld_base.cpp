@@ -371,6 +371,10 @@ auto BoxWorldGameState::get_element_str(Element element) const noexcept -> std::
     return kElementToLongStrMap.at(static_cast<std::size_t>(element));
 }
 
+auto BoxWorldGameState::has_key() const noexcept -> bool {
+    return local_state.inventory.has_value();
+}
+
 // ---------------------------------------------------------------------------
 
 void BoxWorldGameState::ParseBoard() {
