@@ -170,11 +170,11 @@ void BoxWorldGameState::apply_action(Action action) noexcept {
     // Key is consumed, and we add the box colour to our inventory
     if (local_state.lock_indices.find(new_index) != local_state.lock_indices.end() && HasKey(new_index)) {
         local_state.lock_indices.erase(new_index);
-        // local_state.reward_signal_colour = static_cast<std::size_t>(local_state.board[new_index]) + 1;
+        local_state.reward_signal_colour = static_cast<std::size_t>(local_state.board[new_index]) + 1;
         RemoveFromInventory();
         RemoveLock(new_index);
         AddToInventory(IndexFromAction(new_index, Action::kLeft));
-        local_state.reward_signal_colour = static_cast<uint64_t>(local_state.inventory.value()) + 1;
+        // local_state.reward_signal_colour = static_cast<uint64_t>(local_state.inventory.value()) + 1;
         MoveAgent(action);
         local_state.reward_signal_index = local_state.agent_idx + 1;
     }
@@ -429,7 +429,9 @@ void BoxWorldGameState::InitKeyLockIndices() noexcept {
         const auto is_lock = is_colour && is_left_colour;
         assert(!(is_single_key && is_lock));
         if (is_single_key) {
-            local_state.key_indices.insert(idx);
+            local_state.inventory = local_state.board[idx];
+            local_state.board[idx] = Element::kEmpty;
+            // local_state.key_indices.insert(idx);
         }
         if (is_lock) {
             local_state.lock_indices.insert(idx);
