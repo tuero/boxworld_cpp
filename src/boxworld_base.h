@@ -30,6 +30,7 @@ using GameParameters = std::unordered_map<std::string, GameParameter>;
 static const GameParameters kDefaultGameParams{
     {"rng_seed", GameParameter(0)},    // Seed for anything that uses the rng
     {"game_board_str", GameParameter(std::string("3|3|00|20|19|20|20|20|18|00|20"))},    // Game board string
+    {"collect_first_key", GameParameter(false)},
 };
 
 // Shared global state information relevant to all states for the given game
@@ -39,6 +40,7 @@ struct SharedStateInfo {
     GameParameters params;                    // Copy of game parameters for state resetting
     int rng_seed;                             // Seed
     std::string game_board_str;               // String representation of the starting state
+    bool collect_first_key;                   // Flag to collect the first key from the start
     std::vector<uint64_t> zrbht_board;        // Zobrist hashing table for board items
     std::vector<uint64_t> zrbht_inventory;    // Zobrist hashing table for inventory
     std::size_t rows = 0;                     // Rows of the common board

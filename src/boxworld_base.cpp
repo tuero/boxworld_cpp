@@ -11,7 +11,11 @@ namespace boxworld {
 SharedStateInfo::SharedStateInfo(GameParameters params_)
     : params(std::move(params_)),
       rng_seed(std::get<int>(params.at("rng_seed"))),
-      game_board_str(std::get<std::string>(params.at("game_board_str"))) {}
+      game_board_str(std::get<std::string>(params.at("game_board_str"))) {
+    if (params_.find("collect_first_key") != params_.end()) {
+        collect_first_key = std::get<bool>(params.at("collect_first_key"));
+    }
+}
 
 auto SharedStateInfo::operator==(const SharedStateInfo& other) const -> bool {
     return rows == other.rows && cols == other.cols;
@@ -429,9 +433,12 @@ void BoxWorldGameState::InitKeyLockIndices() noexcept {
         const auto is_lock = is_colour && is_left_colour;
         assert(!(is_single_key && is_lock));
         if (is_single_key) {
-            local_state.inventory = local_state.board[idx];
-            local_state.board[idx] = Element::kEmpty;
-            // local_state.key_indices.insert(idx);
+            if (shared_state->collect_first_key) {
+                local_state.inventory = local_state.board[idx];
+                local_state.board[idx] = Element::kEmpty;
+            } else {
+                local_state.key_indices.insert(idx);
+            }
         }
         if (is_lock) {
             local_state.lock_indices.insert(idx);
