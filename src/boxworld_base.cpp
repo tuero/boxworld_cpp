@@ -1,5 +1,11 @@
 #include "boxworld_base.h"
 
+#include <nop/serializer.h>
+#include <nop/utility/buffer_reader.h>
+#include <nop/utility/buffer_writer.h>
+#include <nop/utility/stream_reader.h>
+#include <nop/utility/stream_writer.h>
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -8,11 +14,9 @@
 
 namespace boxworld {
 
-SharedStateInfo::SharedStateInfo(GameParameters params_)
-    : params(std::move(params_)),
-      rng_seed(std::get<int>(params.at("rng_seed"))),
-      game_board_str(std::get<std::string>(params.at("game_board_str"))) {
-    if (params_.find("collect_first_key") != params_.end()) {
+SharedStateInfo::SharedStateInfo(GameParameters params)
+    : game_board_str(std::get<std::string>(params.at("game_board_str"))) {
+    if (params.find("collect_first_key") != params.end()) {
         collect_first_key = std::get<bool>(params.at("collect_first_key"));
     }
 }
@@ -32,6 +36,10 @@ BoxWorldGameState::BoxWorldGameState(const GameParameters& params)
 
 auto BoxWorldGameState::operator==(const BoxWorldGameState& other) const noexcept -> bool {
     return local_state == other.local_state && *shared_state == *other.shared_state;
+}
+
+auto BoxWorldGameState::operator!=(const BoxWorldGameState& other) const noexcept -> bool {
+    return !(*this == other);
 }
 
 const std::vector<Action> BoxWorldGameState::ALL_ACTIONS{Action::kUp, Action::kRight, Action::kDown, Action::kLeft};
@@ -112,6 +120,37 @@ const std::unordered_map<Element, Pixel> kElementToPixelMap{
 
 // ---------------------------------------------------------------------------
 
+BoxWorldGameState::BoxWorldGameState(const std::vector<uint8_t>& byte_data)
+    : shared_state(std::make_shared<SharedStateInfo>()) {
+    std::stringstream ss;
+    ss.write((char const*)byte_data.data(), std::streamsize(byte_data.size()));    // NOLINT(*cstyle-cast)
+    nop::Deserializer<nop::StreamReader<std::stringstream>> deserializer{std::move(ss)};
+    deserializer.Read(&local_state);
+    SharedStateInfo& info = *shared_state;
+    deserializer.Read(&info);
+}
+
+auto BoxWorldGameState::serialize() const -> std::vector<uint8_t> {
+    nop::Serializer<nop::StreamWriter<std::stringstream>> serializer;
+    serializer.Write(local_state);
+    const SharedStateInfo& info = *shared_state;
+    serializer.Write(info);
+    auto& ss = serializer.writer().stream();
+    // discover size of data in stream
+    ss.seekg(0, std::ios::beg);
+    auto bof = ss.tellg();
+    ss.seekg(0, std::ios::end);
+    auto stream_size = std::size_t(ss.tellg() - bof);
+    ss.seekg(0, std::ios::beg);
+
+    // make your vector long enough
+    std::vector<uint8_t> byte_data(stream_size);
+
+    // read directly in
+    ss.read((char*)byte_data.data(), std::streamsize(byte_data.size()));    // NOLINT(*cstyle-cast)
+    return byte_data;
+}
+
 void BoxWorldGameState::reset() {
     // Board, local, and shared state info
     local_state = LocalState();
@@ -121,7 +160,7 @@ void BoxWorldGameState::reset() {
     InitKeyLockIndices();
 
     // zorbist hashing
-    std::mt19937 gen(static_cast<unsigned long>(shared_state->rng_seed));
+    std::mt19937 gen(static_cast<std::mt19937::result_type>(0));
     std::uniform_int_distribution<uint64_t> dist(0);
     const auto channel_size = shared_state->rows * shared_state->cols;
     // Game board
@@ -221,8 +260,8 @@ auto BoxWorldGameState::get_observation() const noexcept -> std::vector<float> {
     }
 
     // Fill inventory
-    if (local_state.inventory) {
-        const auto inventory_channel = static_cast<std::size_t>(*local_state.inventory) + kNumElements - 1;
+    if (has_key()) {
+        const auto inventory_channel = static_cast<std::size_t>(local_state.inventory) + kNumElements - 1;
         const auto inventory_start_idx = inventory_channel * channel_length;
         std::fill_n(obs.begin() + static_cast<int>(inventory_start_idx), channel_length, static_cast<float>(1));
     }
@@ -247,8 +286,8 @@ void BoxWorldGameState::get_observation(std::vector<float>& obs) const noexcept 
     }
 
     // Fill inventory
-    if (local_state.inventory) {
-        const auto inventory_channel = static_cast<std::size_t>(*local_state.inventory) + kNumElements - 1;
+    if (has_key()) {
+        const auto inventory_channel = static_cast<std::size_t>(local_state.inventory) + kNumElements - 1;
         const auto inventory_start_idx = inventory_channel * channel_length;
         std::fill_n(obs.begin() + static_cast<int>(inventory_start_idx), channel_length, static_cast<float>(1));
     }
@@ -313,9 +352,8 @@ auto BoxWorldGameState::to_image() const noexcept -> std::vector<uint8_t> {
     std::vector<uint8_t> img(channel_length * SPRITE_DATA_LEN, 0);
 
     // Top left item is the key held by the agent
-    if (local_state.inventory) {
-        const auto& el = *local_state.inventory;
-        fill_sprite(img, 0, 0, cols, kElementToPixelMap.at(el));
+    if (has_key()) {
+        fill_sprite(img, 0, 0, cols, kElementToPixelMap.at(local_state.inventory));
     }
 
     // Reset of board is inside the border
@@ -377,7 +415,7 @@ auto BoxWorldGameState::get_element_str(Element element) const noexcept -> std::
 }
 
 auto BoxWorldGameState::has_key() const noexcept -> bool {
-    return local_state.inventory.has_value();
+    return local_state.inventory != Element::kAgent;
 }
 
 // ---------------------------------------------------------------------------
@@ -480,12 +518,12 @@ void BoxWorldGameState::MoveAgent(Action action) noexcept {
 }
 
 void BoxWorldGameState::AddToInventory(std::size_t index) noexcept {
-    assert(!local_state.inventory);
+    assert(!has_key());
     const auto flat_size = shared_state->rows * shared_state->cols;
     local_state.inventory = local_state.board[index];
     local_state.zorb_hash ^=
-        shared_state->zrbht_board.at(static_cast<std::size_t>(*local_state.inventory) * flat_size + index);
-    local_state.zorb_hash ^= shared_state->zrbht_inventory[static_cast<std::size_t>(*local_state.inventory)];
+        shared_state->zrbht_board.at(static_cast<std::size_t>(local_state.inventory) * flat_size + index);
+    local_state.zorb_hash ^= shared_state->zrbht_inventory[static_cast<std::size_t>(local_state.inventory)];
 
     local_state.board[index] = Element::kEmpty;
     local_state.zorb_hash ^=
@@ -494,8 +532,8 @@ void BoxWorldGameState::AddToInventory(std::size_t index) noexcept {
 
 void BoxWorldGameState::RemoveFromInventory() noexcept {
     assert(local_state.inventory);
-    local_state.zorb_hash ^= shared_state->zrbht_inventory[static_cast<std::size_t>(*local_state.inventory)];
-    local_state.inventory = std::nullopt;
+    local_state.zorb_hash ^= shared_state->zrbht_inventory[static_cast<std::size_t>(local_state.inventory)];
+    local_state.inventory = Element::kAgent;
 }
 
 void BoxWorldGameState::RemoveLock(std::size_t index) noexcept {
@@ -554,8 +592,7 @@ auto operator<<(std::ostream& os, const BoxWorldGameState& state) -> std::ostrea
 
     // Inventory
     os << "Inventory: "
-       << ((state.local_state.inventory) ? kElementToStrMap.at(static_cast<std::size_t>(*state.local_state.inventory))
-                                         : "")
+       << (state.has_key() ? kElementToStrMap.at(static_cast<std::size_t>(state.local_state.inventory)) : "")
        << std::endl;
     return os;
 }

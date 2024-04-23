@@ -1,3 +1,7 @@
 add_executable(boxworld_test boxworld_test.cpp)
 target_link_libraries(boxworld_test PUBLIC boxworld)
 add_test(boxworld_test boxworld_test)
+
+add_executable(boxworld_test_serialize test_serialize.cpp)
+target_link_libraries(boxworld_test_serialize PUBLIC boxworld)
+add_test(boxworld_test_serialize boxworld_test_serialize)

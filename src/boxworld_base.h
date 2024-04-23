@@ -1,6 +1,8 @@
 #ifndef BOXWORLD_BASE_H_
 #define BOXWORLD_BASE_H_
 
+#include <nop/structure.h>
+
 #include <cstdint>
 #include <iostream>
 #include <memory>
@@ -28,19 +30,17 @@ using GameParameters = std::unordered_map<std::string, GameParameter>;
 
 // Default game parameters
 static const GameParameters kDefaultGameParams{
-    {"rng_seed", GameParameter(0)},    // Seed for anything that uses the rng
     {"game_board_str", GameParameter(std::string("3|3|00|20|19|20|20|20|18|00|20"))},    // Game board string
     {"collect_first_key", GameParameter(false)},
 };
 
 // Shared global state information relevant to all states for the given game
 struct SharedStateInfo {
+    SharedStateInfo() = default;
     SharedStateInfo(GameParameters params);
     // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
-    GameParameters params;                    // Copy of game parameters for state resetting
-    int rng_seed;                             // Seed
     std::string game_board_str;               // String representation of the starting state
-    bool collect_first_key;                   // Flag to collect the first key from the start
+    bool collect_first_key = false;           // Flag to collect the first key from the start
     std::vector<uint64_t> zrbht_board;        // Zobrist hashing table for board items
     std::vector<uint64_t> zrbht_inventory;    // Zobrist hashing table for inventory
     std::size_t rows = 0;                     // Rows of the common board
@@ -48,22 +48,26 @@ struct SharedStateInfo {
     // NOLINTEND(misc-non-private-member-variables-in-classes)
 
     auto operator==(const SharedStateInfo &other) const -> bool;
+    NOP_STRUCTURE(SharedStateInfo, game_board_str, collect_first_key, zrbht_board, zrbht_inventory, rows, cols);
 };
 
 // Information specific for the current game state
 struct LocalState {
+    LocalState() = default;
     // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
-    uint64_t zorb_hash = 0;                             // hash value of the current state
-    uint64_t reward_signal_index = 0;                   // Signal for external information about events
-    uint64_t reward_signal_colour = 0;                  // Signal for external information about events
-    std::size_t agent_idx = 0;                          // Board index the agent resides
-    std::vector<Element> board{};                       // Main storage of the board
-    std::optional<Element> inventory = std::nullopt;    // Current key in the inventory
-    std::unordered_set<std::size_t> key_indices;        // Fast lookup of keys
-    std::unordered_set<std::size_t> lock_indices;       // Fast lookup of locks
+    uint64_t zorb_hash = 0;                          // hash value of the current state
+    uint64_t reward_signal_index = 0;                // Signal for external information about events
+    uint64_t reward_signal_colour = 0;               // Signal for external information about events
+    std::size_t agent_idx = 0;                       // Board index the agent resides
+    std::vector<Element> board{};                    // Main storage of the board
+    Element inventory = Element::kAgent;             // Current key in the inventory
+    std::unordered_set<std::size_t> key_indices;     // Fast lookup of keys
+    std::unordered_set<std::size_t> lock_indices;    // Fast lookup of locks
     // NOLINTEND(misc-non-private-member-variables-in-classes)
 
     auto operator==(const LocalState &other) const -> bool;
+    NOP_STRUCTURE(LocalState, zorb_hash, reward_signal_index, reward_signal_colour, agent_idx, board, inventory,
+                  key_indices, lock_indices);
 };
 
 class BoxWorldGameState {
@@ -71,12 +75,25 @@ public:
     BoxWorldGameState() = delete;
     BoxWorldGameState(const GameParameters &params);
 
+    /**
+     * Construct from byte serialization.
+     * @note this is not safe, only for internal use.
+     */
+    BoxWorldGameState(const std::vector<uint8_t> &byte_data);
+
     bool operator==(const BoxWorldGameState &other) const noexcept;
+    bool operator!=(const BoxWorldGameState &other) const noexcept;
 
     /**
      * Reset the environment to the state as given by the GameParameters
      */
     void reset();
+
+    /**
+     * Serialize the state
+     * @return char vector representing state
+     */
+    [[nodiscard]] auto serialize() const -> std::vector<uint8_t>;
 
     /**
      * Check if the given element is valid.
