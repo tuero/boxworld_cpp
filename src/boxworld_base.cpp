@@ -531,7 +531,7 @@ void BoxWorldGameState::AddToInventory(std::size_t index) noexcept {
 }
 
 void BoxWorldGameState::RemoveFromInventory() noexcept {
-    assert(local_state.inventory);
+    assert(has_key());
     local_state.zorb_hash ^= shared_state->zrbht_inventory[static_cast<std::size_t>(local_state.inventory)];
     local_state.inventory = Element::kAgent;
 }
