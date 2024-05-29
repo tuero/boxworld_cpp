@@ -48,7 +48,7 @@ struct SharedStateInfo {
     // NOLINTEND(misc-non-private-member-variables-in-classes)
 
     auto operator==(const SharedStateInfo &other) const -> bool;
-    NOP_STRUCTURE(SharedStateInfo, game_board_str, collect_first_key, zrbht_board, zrbht_inventory, rows, cols);
+    NOP_STRUCTURE(SharedStateInfo, game_board_str, collect_first_key, rows, cols);
 };
 
 // Information specific for the current game state
@@ -280,6 +280,7 @@ private:
     void AddToInventory(std::size_t index) noexcept;
     void RemoveFromInventory() noexcept;
     void RemoveLock(std::size_t index) noexcept;
+    void InitZrbhtTable() noexcept;
 
     std::shared_ptr<SharedStateInfo> shared_state;
     LocalState local_state;

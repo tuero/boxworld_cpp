@@ -123,11 +123,13 @@ const std::unordered_map<Element, Pixel> kElementToPixelMap{
 BoxWorldGameState::BoxWorldGameState(const std::vector<uint8_t>& byte_data)
     : shared_state(std::make_shared<SharedStateInfo>()) {
     std::stringstream ss;
-    ss.write((char const*)byte_data.data(), std::streamsize(byte_data.size()));    // NOLINT(*cstyle-cast)
+    // ss.write((char const*)byte_data.data(), std::streamsize(byte_data.size()));    // NOLINT(*cstyle-cast)
+    ss.write(reinterpret_cast<char const*>(byte_data.data()), std::streamsize(byte_data.size()));
     nop::Deserializer<nop::StreamReader<std::stringstream>> deserializer{std::move(ss)};
     deserializer.Read(&local_state);
     SharedStateInfo& info = *shared_state;
     deserializer.Read(&info);
+    InitZrbhtTable();
 }
 
 auto BoxWorldGameState::serialize() const -> std::vector<uint8_t> {
@@ -147,18 +149,12 @@ auto BoxWorldGameState::serialize() const -> std::vector<uint8_t> {
     std::vector<uint8_t> byte_data(stream_size);
 
     // read directly in
-    ss.read((char*)byte_data.data(), std::streamsize(byte_data.size()));    // NOLINT(*cstyle-cast)
+    // ss.read((char*)byte_data.data(), std::streamsize(byte_data.size()));    // NOLINT(*cstyle-cast)
+    ss.read(reinterpret_cast<char*>(byte_data.data()), std::streamsize(byte_data.size()));    // NOLINT(*cstyle-cast)
     return byte_data;
 }
 
-void BoxWorldGameState::reset() {
-    // Board, local, and shared state info
-    local_state = LocalState();
-
-    // Parse board
-    ParseBoard();
-    InitKeyLockIndices();
-
+void BoxWorldGameState::InitZrbhtTable() noexcept {
     // zorbist hashing
     std::mt19937 gen(static_cast<std::mt19937::result_type>(0));
     std::uniform_int_distribution<uint64_t> dist(0);
@@ -175,8 +171,21 @@ void BoxWorldGameState::reset() {
     for (std::size_t i = 0; i < kNumColours; ++i) {
         shared_state->zrbht_inventory.push_back(dist(gen));
     }
+}
+
+void BoxWorldGameState::reset() {
+    // Board, local, and shared state info
+    local_state = LocalState();
+
+    // Parse board
+    ParseBoard();
+    InitKeyLockIndices();
+
+    // Zorbist hashing
+    InitZrbhtTable();
 
     // Set initial hash
+    const auto channel_size = shared_state->rows * shared_state->cols;
     for (std::size_t i = 0; i < shared_state->cols * shared_state->rows; ++i) {
         local_state.zorb_hash ^=
             shared_state->zrbht_board.at((static_cast<std::size_t>(local_state.board.at(i)) * channel_size) + i);
