@@ -427,6 +427,20 @@ auto BoxWorldGameState::has_key() const noexcept -> bool {
     return local_state.inventory != Element::kAgent;
 }
 
+void BoxWorldGameState::set_key(Element element) {
+    if (!is_valid_element(element) || element == Element::kEmpty || element == Element::kAgent) {
+        throw std::invalid_argument("Unknown key element.");
+    }
+    if (has_key()) {
+        throw std::invalid_argument("Already has key.");
+    }
+    if (!local_state.key_indices.empty()) {
+        throw std::invalid_argument("Single key already exists.");
+    }
+    local_state.inventory = element;
+    local_state.zorb_hash ^= shared_state->zrbht_inventory[static_cast<std::size_t>(local_state.inventory)];
+}
+
 // ---------------------------------------------------------------------------
 
 void BoxWorldGameState::ParseBoard() {

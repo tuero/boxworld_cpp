@@ -262,6 +262,11 @@ public:
      */
     [[nodiscard]] auto has_key() const noexcept -> bool;
 
+    /**
+     * Set the current key in the inventory
+     */
+    void set_key(Element element);
+
     // All possible actions
     static const std::vector<Action> ALL_ACTIONS;
 
