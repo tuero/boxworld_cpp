@@ -1,0 +1,16 @@
+[build-system]
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pyboxworld"
+version = "0.1.0"
+description = "Python Boxworld bindings"
+dependencies = ["numpy"]
+
+[tool.scikit-build]
+wheel.packages = ["python/pyboxworld"]
+build.targets = ["pyboxworld"]
+cmake.build-type = "Release"
+cmake.args = ["-DCMAKE_CXX_FLAGS='-g -O2 -fno-omit-frame-pointer'"]
+cmake.verbose = true
