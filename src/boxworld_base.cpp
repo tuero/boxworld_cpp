@@ -146,7 +146,7 @@ BoxWorldGameState::BoxWorldGameState(InternalState&& internal_state)
       reward_signal(internal_state.reward_signal),
       inventory(static_cast<Element>(internal_state.inventory)),
       key_indices(std::move(internal_state).key_indices),
-      lock_indices(std::move(internal_state).key_indices) {
+      lock_indices(std::move(internal_state).lock_indices) {
     board.clear();
     for (const auto& b : internal_state.board) {
         board.push_back(static_cast<Element>(b));
