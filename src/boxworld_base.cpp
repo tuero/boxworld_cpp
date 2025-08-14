@@ -281,7 +281,7 @@ auto BoxWorldGameState::to_image() const noexcept -> std::vector<uint8_t> {
     for (int h = 1; h < rows_obs - 1; ++h) {
         for (int w = 1; w < cols_obs - 1; ++w) {
             const auto& el = board[static_cast<std::size_t>(++board_idx)];
-            fill_sprite(img, h, w, cols, kElementToPixelMap.at(el));
+            fill_sprite(img, h, w, cols_obs, kElementToPixelMap.at(el));
         }
     }
     return img;
